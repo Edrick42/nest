@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// ============================================
+// User Domain
+// ============================================
+model User {
+  id                String        @id @default(uuid())
+  name              String
+  email             String        @unique
+  password          String
+  roleId            String
+  role              Role          @relation(fields: [roleId], references: [id])
+
+  createdAt         Datetime      @default(now())
+  updatedAt         Datetime      @updatedAt
+  deletedAt         Datetime?
+
+  tasksCreated      Task[]        @relation("TaskCreatedBy")
+  tasksAssigned     Task[]        @relation("TaskAssignedTo")
+  taskUpdated       Task[]        @relation("taskUpdatedBy")
+
+  subtasksCreated   Subtasks[]    @relation("SubtaskCreatedBy")
+  subtasksUpdated   Subtasks[]    @relation("SubtaskUpdatedBy")
+
+  @@map("users")
+  @@schema("auth")
+}
+
+model Role {
+  id                String        @id @default(uuid())
+  name              String        @unique
+
+  users             User[]
+
+  @@map("roles")
+  @@schema("auth")
+}
+
+// ============================================
+// Task Domain
+// ============================================
+model Task {
+  id            String   @id @default(uuid())
+  title         String
+  description   String?
+  status        String   @default("pending")
+  dueDate       DateTime?
+
+  createdById   String
+  createdBy     User     @relation("TaskCreatedBy", fields: [createdById], references: [id])
+
+  assignedToId  String
+  assignedTo    User     @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+
+  updatedById   String
+  updatedBy     User     @relation("TaskUpdatedBy", fields: [updatedById], references: [id])
+
+  subtasks      Subtask[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  @@map("tasks")
+  @@schema("work")
+}
+
+model Subtask {
+  id           String   @id @default(uuid())
+  title        String
+  completed    Boolean  @default(false)
+
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  createdById  String
+  createdBy    User     @relation("SubtaskCreatedBy", fields: [createdById], references: [id])
+
+  updatedById  String
+  updatedBy    User     @relation("SubtaskUpdatedBy", fields: [updatedById], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@map("subtasks")
+  @@schema("work")
+}
