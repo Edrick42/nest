@@ -7,11 +7,13 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["auth", "work"] 
 }
 
 
@@ -26,16 +28,16 @@ model User {
   roleId            String
   role              Role          @relation(fields: [roleId], references: [id])
 
-  createdAt         Datetime      @default(now())
-  updatedAt         Datetime      @updatedAt
-  deletedAt         Datetime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
 
   tasksCreated      Task[]        @relation("TaskCreatedBy")
   tasksAssigned     Task[]        @relation("TaskAssignedTo")
-  taskUpdated       Task[]        @relation("taskUpdatedBy")
+  taskUpdated       Task[]        @relation("TaskUpdatedBy")
 
-  subtasksCreated   Subtasks[]    @relation("SubtaskCreatedBy")
-  subtasksUpdated   Subtasks[]    @relation("SubtaskUpdatedBy")
+  subtasksCreated   Subtask[]    @relation("SubtaskCreatedBy")
+  subtasksUpdated   Subtask[]    @relation("SubtaskUpdatedBy")
 
   @@map("users")
   @@schema("auth")
